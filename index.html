@@ -194,6 +194,11 @@
             padding-bottom: 0.2rem;
         }
 
+        /* Perbaikan Tampilan Aksara Kawi pada Panel Informasi */
+        .info-box span, .info-box b, .info-box h4 {
+            font-family: 'Noto Sans Kawi', system-ui, sans-serif;
+        }
+
         .info-box code {
             background: #e1e5ea;
             padding: 0.1rem 0.3rem;
@@ -208,7 +213,7 @@
 
     <div class="container">
         <h1>Aplikasi Tata Tulis Aksara Kawi</h1>
-        <div class="subtitle">STANDAR UNICODE (NOTO SANS KAWI)</div>
+        <div class="subtitle">STANDAR UNICODE (NOTO SANS KAWI) - SCRIPTIO CONTINUA</div>
 
         <div class="control-group">
             <div class="control-item">
@@ -287,13 +292,13 @@
                 </div>
 
                 <div class="info-box">
-                    <h4>Aturan Pasangan (Otomatis)</h4>
+                    <h4>Aturan Sandhi (Otomatis)</h4>
                     <ul>
-                        <li><span>Sistem Ligatur Unicode</span> <code>s_p / sp</code></li>
+                        <li><span>Sistem Scriptio Continua</span> <code>Spasi dihapus</code></li>
+                        <li><span>Asimilasi Warga Aksara</span> <code>Cth: n+c = ny+c</code></li>
+                        <li><span>Repha Dobel Konsonan</span> <code>Cth: r+k = r+k+ka</code></li>
                         <li><span>Ligatur Ya (Pengkal)</span> <code>ky</code></li>
                         <li><span>Ligatur Ra (Cakra)</span> <code>kr</code></li>
-                        <li><span>Nukta Kawi (𑽏)</span> <code>+</code> <i>(Cth: k+)</i></li>
-                        <li><span style="font-size:0.75rem; color:#777; line-height:1.2; margin-top:0.3rem;">Font Noto Sans merender <b>Virama (𑽂)</b> otomatis menjadi pasangan saat bertemu konsonan lain.</span></li>
                     </ul>
                 </div>
             </div>
@@ -313,7 +318,7 @@
 
         const CONS_MAP = {
             'th': '𑼢', 'dh': '𑼤', 'ny': '𑼛', 'ng': '𑼖',
-            'TH': '𑼜', 'DH': '𑼞', 'NY': '𑼛', 'NG': '𑼖',
+            'TH': '𑼝', 'DH': '𑼟', 'NY': '𑼛', 'NG': '𑼖',
             'tH': '𑼢', 'dH': '𑼤', 'Th': '𑼢', 'Dh': '𑼤', 
             'kh': '𑼓', 'gh': '𑼕', 'ch': '𑼘', 'jh': '𑼚', 'ph': '𑼧', 'bh': '𑼩',
             'h':'𑼲', 'n':'𑼥', 'c':'𑼗', 'r':'𑼬', 'k':'𑼒',
@@ -324,7 +329,36 @@
             'sh':'𑼰', 'J':'𑼚', 'Y':'𑼫', 'M':'𑼪', 'G':'𑼕', 'B':'𑼩'
         };
 
-        const VIRAMA = '𑽂'; // U+11F42 Kawi Virama (Pangkon / Pemicu Pasangan)
+        const VIRAMA = '𑽂'; // U+11F42 Kawi Virama
+
+        // Definisi Warga Aksara (Class of Consonants)
+        function getWarga(char) {
+            if (['𑼗','𑼘','𑼙','𑼚','𑼛','𑼯','𑼫'].includes(char)) return 'talawya';
+            if (['𑼜','𑼝','𑼞','𑼟','𑼠','𑼰','𑼬'].includes(char)) return 'murdhanya';
+            if (['𑼡','𑼢','𑼣','𑼤','𑼥','𑼱','𑼭'].includes(char)) return 'dantya';
+            if (['𑼒','𑼓','𑼔','𑼕','𑼖','𑼲'].includes(char)) return 'kanthya';
+            if (['𑼦','𑼧','𑼨','𑼩','𑼪','𑼮'].includes(char)) return 'osthya';
+            return 'unknown';
+        }
+
+        // Fungsi Asimilasi Warga Aksara (Sibilan & Sengau)
+        function getAssimilatedConsChar(consKey, consChar, nextConsChar) {
+            if (!nextConsChar) return consChar;
+            let nextWarga = getWarga(nextConsChar);
+            
+            if (consKey === 's') {
+                if (nextWarga === 'talawya') return '𑼯'; // ś
+                if (nextWarga === 'murdhanya') return '𑼰'; // ṣ
+            } 
+            else if (['n', 'm', 'ng', 'ny', 'N', 'NY', 'NG', 'M'].includes(consKey)) {
+                if (nextWarga === 'talawya') return '𑼛'; // ny
+                if (nextWarga === 'murdhanya') return '𑼠'; // NNA
+                if (nextWarga === 'dantya') return '𑼥'; // n
+                if (nextWarga === 'kanthya') return '𑼖'; // ng
+                if (nextWarga === 'osthya') return '𑼪'; // m
+            }
+            return consChar;
+        }
 
         function matchVowel(str, idx) {
             let sub2 = str.substr(idx, 2);
@@ -413,7 +447,10 @@
         function transliterateKawi(rawText) {
             if (!rawText) return '';
             
-            // Translasi Macros / Punctuation
+            // Scriptio Continua: Hapus seluruh spasi & tab agar kata-kata menyatu (sandhi lintas kata)
+            rawText = rawText.replace(/[ \t]+/g, '');
+            
+            // Translasi Macros
             let text = rawText
                 .replace(/@luhur/g, '𑽅')
                 .replace(/@madya/g, '𑽆')
@@ -429,10 +466,9 @@
                 let token = tokens[t];
 
                 if (token.type === 'sep') {
-                    if (token.val === ' ') { result += ' '; continue; }
                     if (token.val === '\n') { result += '\n'; continue; }
-                    if (token.val === '.') { result += '𑽄'; continue; } // Lungsi
-                    if (token.val === ',') { result += '𑽃'; continue; } // Lingsa
+                    if (token.val === '.') { result += '𑽄'; continue; }
+                    if (token.val === ',') { result += '𑽃'; continue; }
                     result += token.val;
                     continue;
                 }
@@ -443,10 +479,8 @@
                 while (i < word.length) {
                     let c = word[i];
 
-                    // Abaikan pemisah intra-kata
                     if (c === '-' || c === '_') { i++; continue; }
 
-                    // Angka Kawi
                     if (c >= '0' && c <= '9') {
                         const numMap = {'0':'𑽐','1':'𑽑','2':'𑽒','3':'𑽓','4':'𑽔','5':'𑽕','6':'𑽖','7':'𑽗','8':'𑽘','9':'𑽙'};
                         result += numMap[c];
@@ -454,7 +488,7 @@
                         continue;
                     }
 
-                    // Vocalic R & L Independen (Berlaku di awal kata atau setelah vokal/hyphen)
+                    // Vocalic R & L
                     let checkRe = word.substr(i, 2).toLowerCase();
                     if (checkRe === 're' || checkRe === 'le') {
                         let isStart = (i === 0);
@@ -473,7 +507,6 @@
                         let consChar = cons.char;
                         let nextIdx = i + cons.len;
                         
-                        // Cek Nukta (Modifier / Cecak telu di input lama)
                         while (nextIdx < word.length && word[nextIdx] === '+') {
                             consChar += '𑽏'; 
                             nextIdx++;
@@ -483,17 +516,41 @@
                         while(peekIdx < word.length && (word[peekIdx] === '-' || word[peekIdx] === '_')) peekIdx++;
                         
                         let nextV = matchVowel(word, peekIdx);
+                        let isMati = !nextV;
+                        let nextCons = isMati ? matchConsonant(word, peekIdx) : null;
+                        
+                        // Eksekusi Asimilasi Warga Aksara (Sandhi Konsonan)
+                        if (isMati && nextCons) {
+                            consChar = getAssimilatedConsChar(cons.key, consChar, nextCons.char);
+                        }
                         
                         if (nextV) {
-                            // Eksekusi Konsonan + Vokal
                             result += consChar + getSandhanganVowel(nextV.val);
                             i = peekIdx + nextV.len;
                         } else {
-                            // Eksekusi Konsonan Mati
                             let isWordEnd = (peekIdx >= word.length);
                             let crossVowel = null;
                             
-                            // Cek potensi ligatur antar kata jika kata berikutnya diawali vokal
+                            // Eksekusi Repha Dobel: R mati di tengah kata yang diikuti konsonan lain
+                            if (!isWordEnd && cons.key === 'r' && nextCons) {
+                                let nextNextIdx = peekIdx + nextCons.len;
+                                while(nextNextIdx < word.length && (word[nextNextIdx] === '-' || word[nextNextIdx] === '_')) nextNextIdx++;
+                                let nextNextV = matchVowel(word, nextNextIdx);
+                                let nextNextCons = !nextNextV ? matchConsonant(word, nextNextIdx) : null;
+                                
+                                let assimilatedNextConsChar = nextCons.char;
+                                if (nextNextCons) {
+                                    // Pastikan huruf yang digandakan sudah mengalami asimilasi terlebih dahulu
+                                    assimilatedNextConsChar = getAssimilatedConsChar(nextCons.key, nextCons.char, nextNextCons.char);
+                                }
+
+                                // Cetak [Ra + Virama + Konsonan Berikut + Virama]
+                                // Pengulangan berikutnya pada input akan mengeksekusi konsonan yang sama (menjadi repha dobel)
+                                result += consChar + VIRAMA + assimilatedNextConsChar + VIRAMA;
+                                i = nextIdx;
+                                continue;
+                            }
+
                             if (isWordEnd && t + 1 < tokens.length && tokens[t+1].type === 'word') {
                                 crossVowel = matchVowel(tokens[t+1].val, 0);
                             }
@@ -501,18 +558,15 @@
                             if (crossVowel) {
                                 let isCap = (crossVowel.val === crossVowel.val.toUpperCase() && crossVowel.val !== crossVowel.val.toLowerCase() && crossVowel.val !== "e'" && crossVowel.val !== "ex");
                                 if (isCap) {
-                                    // Cegah penggabungan jika diformat sebagai Aksara Swara
                                     if (cons.key === 'ng') result += (isWordEnd) ? '𑼁' : consChar + VIRAMA;
                                     else if (cons.key === 'h') result += (isWordEnd) ? '𑼂' : consChar + VIRAMA;
                                     else result += consChar + VIRAMA;
                                 } else {
-                                    // Gabungkan konsonan mati dengan sandhangan vokal kata berikutnya
                                     result += consChar + getSandhanganVowel(crossVowel.val);
                                     tokens[t+1].val = tokens[t+1].val.substr(crossVowel.len);
                                 }
                                 i = nextIdx;
                             } else {
-                                // Eksekusi konsonan mati murni di akhir kalimat atau di dalam suku kata tertutup
                                 if (cons.key === 'ng') {
                                     result += (isWordEnd) ? '𑼁' : consChar + VIRAMA; 
                                 } else if (cons.key === 'h') {
@@ -526,7 +580,6 @@
                         continue;
                     }
 
-                    // Eksekusi Vokal Mandiri
                     let vMatch = matchVowel(word, i);
                     if (vMatch) {
                         result += getMandarinVowel(vMatch.val);
