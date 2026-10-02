@@ -1,30 +1,9 @@
 <!DOCTYPE html>
 <html lang="id">
-<head><style>
-@font-face {
-  font-family: "Optimistic";
-  font-style: normal;
-  font-weight: 400 600;
-  font-display: swap;
-  src: url("/fonts/OptimisticAI_VF_Optimized.woff2") format("woff2");
-}
-@font-face {
-  font-family: "Optimistic Mono";
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url("/fonts/OptimisticMono_W_TextRegular.woff2") format("woff2");
-}
-:where(html) {
-  font-family: "Optimistic", system-ui, sans-serif;
-}
-:where(code, pre, kbd, samp) {
-  font-family: "Optimistic Mono", ui-monospace, monospace;
-}
-</style>
+<head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Kawi - Noto Sans Kawi Unicode</title>
+<title>Aksara Kawi - Noto Sans Kawi Unicode</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Kawi:wght@400;500;600&display=swap" rel="stylesheet">
@@ -63,29 +42,23 @@ textarea:focus{outline:none;border-color:#c17a3a}
 .kawi{font-family:'Noto Sans Kawi',serif;font-size:1.35em;line-height:1}
 code{background:#f0e6d8;padding:.12rem .38rem;border-radius:4px;font-weight:700;font-size:.85em;color:#5a3d26}
 .small{font-size:.8em;color:#8a7e73}
-.note{background:#fff4e0;border:1px solid #f0d9a8;padding:.8rem 1rem;border-radius:8px;font-family:sans-serif;font-size:.85rem;margin-bottom:1rem}
 </style>
 </head>
 <body>
 <div class="container">
 <h1>AKSARA KAWI</h1>
 <div class="sub">NOTO SANS KAWI UNICODE</div>
-
 <div class="ctrl">
 <label>Ukuran <span id="sz">42</span> <input type="range" id="size" min="24" max="72" value="42"></label>
 <span class="small">Ketik Latin, otomatis jadi Kawi Unicode U+11F00–U+11F5A</span>
 </div>
-
 <div class="row"><span style="font-family:sans-serif;font-weight:600">Latin</span><button id="clear" class="btn btn-ghost">Hapus</button></div>
-<textarea id="input" placeholder="Ketik di sini... contoh: anak Agung, sang Hyang, sastra Agung"></textarea>
-
+<textarea id="input" placeholder="Ketik di sini..."></textarea>
 <div class="row" style="margin-top:1rem"><span style="font-family:sans-serif;font-weight:600">Kawi</span><button id="copy" class="btn">Salin</button></div>
 <div class="preview-box"><div id="out" class="preview"></div></div>
-
 <div class="panel">
 <h2>Cara Penulisan dengan Keyboard Fisik (Latin → Kawi)</h2>
 <div class="grid">
-
 <div class="box">
 <h3>Swara Mandiri (Wajib Kapital)</h3>
 <ul>
@@ -98,14 +71,12 @@ code{background:#f0e6d8;padding:.12rem .38rem;border-radius:4px;font-weight:700;
 <li><span><span class="kawi">𑼊</span> r̥</span><code>Re / RE</code></li>
 <li><span><span class="kawi">𑼌</span> l̥</span><code>Le / LE</code></li>
 <li><span><span class="kawi">𑼎</span> e taling</span><code>E' / Ex / É</code></li>
-<li><span><span class="kawi">𑼄𑽀</span> e pepet (sandhangan)</span><code>e (kecil)</code></li>
+<li><span><span class="kawi">𑼄𑽀</span> e pepet</span><code>e (kecil)</code></li>
 <li><span><span class="kawi">𑼐</span> o</span><code>O</code></li>
 <li><span><span class="kawi">𑼏</span> ai</span><code>Ai / AI</code></li>
 <li><span><span class="kawi">𑼐𑼴</span> au</span><code>Au / AU</code></li>
 </ul>
-
 </div>
-
 <div class="box">
 <h3>Wyanjana</h3>
 <ul>
@@ -144,20 +115,36 @@ code{background:#f0e6d8;padding:.12rem .38rem;border-radius:4px;font-weight:700;
 <li><span><span class="kawi">𑼲</span> ha</span><code>h</code></li>
 </ul>
 </div>
-
-
-
-
-
 </div>
 </div>
-
 </div>
 
 <script>
+/**
+ * kawi.js - Aksara Kawi Transliteration Library
+ * Latin -> Kawi Unicode U+11F00-U+11F5A
+ * Final Locked Version with Warga Aksara Rules
+ * 
+ * Usage in browser:
+ *   <script src="kawi.js"><\/script>
+ *   transliterate('Anak remaja') -> '𑼄𑼥𑼒𑼺𑼪𑼙'
+ * 
+ * Usage in other apps:
+ *   Kawi.transliterate(text)
+ *   Kawi.K - constants
+ * 
+ * Rules included:
+ * - Swara mandiri kapital, sandhangan kecil
+ * - Cakra keret bawah benar (𑼺)
+ * - kre' / kré handling
+ * - Panglancar ha/ya/wa untuk hiatus a-i, a-u
+ * - Warga Aksara: s/n mati + talawya/murdhanya/dantya/kanthya/osthya
+ * - r + n -> ṇa, r + s -> ṣa, k + s -> ṣa
+ */
+
 const K={
 REPHA:'\u{11F02}',CONJ:'\u{11F42}',KILLER:'\u{11F41}',ANUS:'\u{11F01}',VIS:'\u{11F03}',
-A:'\u{11F04}',AA:'\u{11F05}',I:'\u{11F06}',II:'\u{11F07}',U:'\u{11F08}',UU:'\u{11F09}',Rvoc:'\u{11F0A}',Lvoc:'\u{11F0C}',E:'\u{11F0E}',AI:'\u{11F0F}',O:'\u{11F10}',
+A:'\u{11F04}',AA:'\u{11F05}',I:'\u{11F06}',II:'\u{11F07}',U:'\u{11F08}',UU:'\u{11F09}',Rvoc:'\u{11F0A}',RRvoc:'\u{11F0B}',Lvoc:'\u{11F0C}',LLvoc:'\u{11F0D}',E:'\u{11F0E}',AI:'\u{11F0F}',O:'\u{11F10}',
 KA:'\u{11F12}',KHA:'\u{11F13}',GA:'\u{11F14}',GHA:'\u{11F15}',NGA:'\u{11F16}',CA:'\u{11F17}',CHA:'\u{11F18}',JA:'\u{11F19}',JHA:'\u{11F1A}',NYA:'\u{11F1B}',TTA:'\u{11F1C}',TTHA:'\u{11F1D}',DDA:'\u{11F1E}',DDHA:'\u{11F1F}',NNA:'\u{11F20}',TA:'\u{11F21}',THA:'\u{11F22}',DA:'\u{11F23}',DHA:'\u{11F24}',NA:'\u{11F25}',PA:'\u{11F26}',PHA:'\u{11F27}',BA:'\u{11F28}',BHA:'\u{11F29}',MA:'\u{11F2A}',YA:'\u{11F2B}',RA:'\u{11F2C}',LA:'\u{11F2D}',WA:'\u{11F2E}',SHA:'\u{11F2F}',SSA:'\u{11F30}',SA:'\u{11F31}',HA:'\u{11F32}',
 VS_AA:'\u{11F34}',VS_I:'\u{11F36}',VS_II:'\u{11F37}',VS_U:'\u{11F38}',VS_UU:'\u{11F39}',VS_R:'\u{11F3A}',VS_L:'\u{11F3C}',VS_E:'\u{11F3E}',VS_AI:'\u{11F3F}',VS_EU:'\u{11F40}',
 DANDA:'\u{11F43}',DOT:'\u{11F49}',
@@ -303,6 +290,34 @@ function transliterate(raw){
 
   let word=tk.w;
   let lastConsonant=null;
+  // PENGECUALIAN KHUSUS: satu kata "rwa" = ra dipasangi wa (tanpa ubah aturan lain)
+  if(word.toLowerCase()==='rwa'){
+   if(pending){
+    if(pending.type==='ng') out+=K.ANUS;
+    else if(pending.type==='h') out+=K.VIS;
+    else if(pending.ch===K.RA) out+=K.RA+K.KILLER;
+    else out+=pending.ch+K.KILLER;
+    pending=null;
+   }
+   out+=K.RA+K.CONJ+K.WA;
+   prevVowel=true;
+   lastConsonant=K.WA;
+   continue;
+  }
+  // PENGECUALIAN KHUSUS: satu kata "rsi" = re (VOCALIC R 11F0A) dipasangi ssa (11F30) + wulu (VS_I 11F36)
+  if(word.toLowerCase()==='rsi'){
+   if(pending){
+    if(pending.type==='ng') out+=K.ANUS;
+    else if(pending.type==='h') out+=K.VIS;
+    else if(pending.ch===K.RA) out+=K.RA+K.KILLER;
+    else out+=pending.ch+K.KILLER;
+    pending=null;
+   }
+   out+=K.Rvoc+K.CONJ+K.SSA+K.VS_I;
+   prevVowel=true;
+   lastConsonant=K.SSA;
+   continue;
+  }
   // sambungan antar kata - versi stabil + fix anak remaja (bawah benar) + r+taling setelah mati
   if(pending){
    let fc=mC(word,0);
@@ -669,16 +684,58 @@ function transliterate(raw){
  return out;
 }
 
+// Export for various environments
+(function(root){
+  const api = {
+    transliterate,
+    K,
+    WARGA,
+    getWarga,
+    isSibilant,
+    isNasalN,
+    MAP,
+    tokenize
+  };
+  // Browser global
+  if (typeof window !== 'undefined') {
+    window.transliterate = transliterate;
+    window.Kawi = api;
+  }
+  // Node / CommonJS
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports = api;
+  }
+  // ES Module export (if used via import)
+  if (typeof exports !== 'undefined') {
+    exports.transliterate = transliterate;
+    exports.Kawi = api;
+  }
+})(typeof self !== 'undefined' ? self : this);
+
+
 const input=document.getElementById('input');
 const out=document.getElementById('out');
 const size=document.getElementById('size');
 const sz=document.getElementById('sz');
-function refresh(){ out.textContent=transliterate(input.value); }
+function refresh(){
+  const txt = input.value;
+  if(!txt.trim()){ out.textContent=''; return; }
+  try{
+    out.textContent=transliterate(txt);
+  }catch(e){
+    console.error(e);
+    out.textContent='Error: '+e.message;
+  }
+}
 input.addEventListener('input',refresh);
 size.addEventListener('input',e=>{sz.textContent=e.target.value; out.style.fontSize=e.target.value+'px';});
 document.getElementById('clear').addEventListener('click',()=>{input.value=''; refresh();});
-document.getElementById('copy').addEventListener('click',()=>{navigator.clipboard.writeText(out.textContent).then(()=>alert('Disalin'));});
+document.getElementById('copy').addEventListener('click',()=>{
+  const t=out.textContent;
+  if(!t){ alert('Belum ada hasil'); return; }
+  navigator.clipboard.writeText(t).then(()=>alert('Disalin'));
+});
 refresh();
 </script>
-<script>(function(){var loc=location.href.replace(/#.*$/,"");var ATTR_NAMES=["data-product-id","data-productid","data-product_id","product-id","productid","product_id","data-source-entity-id","source-entity-id","source_entity_id","data-product","data-metadata","data-meta"];var DATASET_KEYS=["productId","productid","product_id","sourceEntityId","sourceentityid","source_entity_id","product","metadata","meta"];function readProductId(value){if(typeof value!=="string"||value.length===0)return null;if(/^[0-9]{6,}$/.test(value))return value;var match=value.match(/(?:product(?:_|-)?id|source(?:_|-)?entity(?:_|-)?id)["'=:\s]+([0-9]{6,})/i);return match?match[1]:null}function extractProductId(start){for(var node=start;node&&node!==document.body;node=node.parentElement){for(var i=0;i<ATTR_NAMES.length;i++){var attrValue=node.getAttribute&&node.getAttribute(ATTR_NAMES[i]);var attrProductId=readProductId(attrValue);if(attrProductId)return attrProductId}var dataset=node.dataset||null;if(dataset){for(var j=0;j<DATASET_KEYS.length;j++){var dataValue=dataset[DATASET_KEYS[j]];var dataProductId=readProductId(dataValue);if(dataProductId)return dataProductId}}}return null}function isInlineMediaSlotElement(node){return !!(node&&node.getAttribute&&node.getAttribute("data-clippy-inline-media-slot")!==null)}function findInlineMediaSlot(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(isInlineMediaSlotElement(node))return node}return null}function readInlineMediaUrl(node){if(!node)return null;return node.getAttribute&&((node.getAttribute("data-clippy-inline-media-url")||node.getAttribute("data-url")||node.getAttribute("data_url")))||node.href||null}function stripHash(url){return String(url).replace(/#.*$/,"")}function urlsMatch(a,b){if(!a||!b)return false;try{return stripHash(new URL(a,loc).href)===stripHash(new URL(b,loc).href)}catch(_){return stripHash(a)===stripHash(b)}}function isFirstPartyReelUrl(value){try{var url=new URL(value,loc);if(url.protocol!=="https:")return false;var host=url.hostname.toLowerCase();var supported=host==="instagram.com"||host.endsWith(".instagram.com")||host==="facebook.com"||host.endsWith(".facebook.com");return supported&&/\/reels?\//i.test(url.pathname)}catch(_){return false}}function isInlineMediaUrlClick(node,href){var slot=findInlineMediaSlot(node);if(!slot)return false;var slotUrl=readInlineMediaUrl(slot);if(slotUrl)return urlsMatch(href,slotUrl);return isFirstPartyReelUrl(href)}function findDataHref(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(node.getAttribute){var href=node.getAttribute("data-href")||node.getAttribute("data-url");if(href)return{href:href,node:node}}}return null}var nativeOpen=window.open;window.open=function(url){if(parent!==window&&typeof url==="string"&&/^https?:\/\//.test(url)){parent.postMessage({type:"ecto:usercontent-link-click",href:url},"*");return null}return nativeOpen?nativeOpen.apply(window,arguments):null};document.addEventListener("click",function(e){var target=e.target instanceof Element?e.target:null;if(!target)return;if(parent===window)return;var a=target.closest?target.closest("a[href]"):null;if(a&&a.href&&/^https?:\/\//.test(a.href)&&a.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(a,a.href))return;var productId=extractProductId(target)||extractProductId(a);if(productId){e.preventDefault();parent.postMessage({type:"ecto-artifact-link-click",productId:productId},"*");return}e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:a.href},"*");return}var dataHref=findDataHref(target);if(dataHref&&/^https?:\/\//.test(dataHref.href)&&dataHref.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(dataHref.node,dataHref.href))return;e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:dataHref.href},"*")}},true)})();</script><script>(function(){var FOCUS_TYPE="ecto:artifact-focus-request";var CLOSE_TYPE="ecto:artifact-close-request";function focusArtifactDocument(){var body=document.body;if(!body)return;try{window.focus();}catch(e){}if(!body.hasAttribute("tabindex"))body.setAttribute("tabindex","-1");try{body.focus({preventScroll:true});}catch(e){try{body.focus();}catch(e2){}}}window.addEventListener("message",function(event){if(event.source!==window.parent)return;var data=event.data;if(!data||typeof data!=="object"||data.type!==FOCUS_TYPE)return;if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",focusArtifactDocument,{once:true});return;}focusArtifactDocument();});window.addEventListener("keydown",function(event){if(event.key!=="Escape")return;window.setTimeout(function(){if(event.defaultPrevented)return;window.parent.postMessage({type:CLOSE_TYPE},"*");},0);});})();</script></body>
+</body>
 </html>
