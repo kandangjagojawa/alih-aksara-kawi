@@ -1,6 +1,27 @@
 <!DOCTYPE html>
 <html lang="id">
-<head>
+<head><style>
+@font-face {
+  font-family: "Optimistic";
+  font-style: normal;
+  font-weight: 400 600;
+  font-display: swap;
+  src: url("/fonts/OptimisticAI_VF_Optimized.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Optimistic Mono";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/OptimisticMono_W_TextRegular.woff2") format("woff2");
+}
+:where(html) {
+  font-family: "Optimistic", system-ui, sans-serif;
+}
+:where(code, pre, kbd, samp) {
+  font-family: "Optimistic Mono", ui-monospace, monospace;
+}
+</style>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Aksara Kawi - Noto Sans Kawi Unicode</title>
@@ -290,6 +311,28 @@ function transliterate(raw){
 
   let word=tk.w;
   let lastConsonant=null;
+  // ATURAN KHUSUS: setelah konsonan mati (kecuali r mati, ng mati, h mati), le (11F0C) -> la+pepet, re (11F0A) -> VS_R
+  // Jika pending ada dan kata berikutnya adalah 'le' atau 're', maka:
+  if(pending && (word.toLowerCase()==='le' || word.toLowerCase()==='re')){
+   let isLe = word.toLowerCase()==='le';
+   if(pending.type==='ng' || pending.type==='h' || pending.ch===K.RA){
+    if(pending.type==='ng') out+=K.ANUS;
+    else if(pending.type==='h') out+=K.VIS;
+    else out+=K.REPHA;
+    out+= (isLe ? K.Lvoc : K.Rvoc);
+   } else {
+    if(isLe){
+     out+=pending.ch+K.CONJ+K.LA+K.VS_EU;
+    } else {
+     // re: konsonan mati diberi VS_R
+     out+=pending.ch+K.VS_R;
+    }
+   }
+   pending=null;
+   prevVowel=true;
+   lastConsonant= (isLe ? K.LA : K.RA);
+   continue;
+  }
   // PENGECUALIAN KHUSUS: satu kata "rwa" = ra dipasangi wa (tanpa ubah aturan lain)
   if(word.toLowerCase()==='rwa'){
    if(pending){
@@ -337,18 +380,30 @@ function transliterate(raw){
    // PRIORITAS: vokal dulu, kecuali re/le yang sebenarnya ra+taling -> biarkan fc yang tangani
    if(fv && !isFvReLeTaling){
     let low=fv.v.toLowerCase();
-    // re/le setelah konsonan mati => cakra keret (KA + VS_R = bawah yang benar)
+    // re/le setelah konsonan mati => aturan khusus le dan re (3 poin)
     if(low==='re' || low==='le'){
-     if(pending.type==='normal'){
-      out+=pending.ch+(low==='re' ? K.VS_R : K.VS_L);
-     } else if(pending.type==='ng'){
-      out+=K.NGA+(low==='re' ? K.VS_R : K.VS_L);
-     } else if(pending.type==='h'){
-      out+=K.HA+(low==='re' ? K.VS_R : K.VS_L);
-     } else if(pending.ch===K.RA){
-      out+=K.RA+(low==='re' ? K.VS_R : K.VS_L);
+     if(low==='le'){
+      // Aturan le setelah mati (3 poin)
+      if(pending.type==='ng' || pending.type==='h' || pending.ch===K.RA){
+       if(pending.type==='ng') out+=K.ANUS;
+       else if(pending.type==='h') out+=K.VIS;
+       else out+=K.REPHA;
+       out+=K.Lvoc;
+      } else {
+       // mati selain ng,h,r -> la+pepet pasangan
+       out+=pending.ch+K.CONJ+K.LA+K.VS_EU;
+      }
      } else {
-      out+=inde(fv.v);
+      // re: aturan sama untuk re
+      if(pending.type==='ng' || pending.type==='h' || pending.ch===K.RA){
+       if(pending.type==='ng') out+=K.ANUS;
+       else if(pending.type==='h') out+=K.VIS;
+       else out+=K.REPHA;
+       out+=K.Rvoc;
+      } else {
+       // mati selain ng,h,r -> konsonan mati diberi VS_R
+       out+=pending.ch+K.VS_R;
+      }
      }
      word=word.substr(fv.len);
      pending=null; prevVowel=true; if(!word) continue;
@@ -473,11 +528,19 @@ function transliterate(raw){
   } else if(prevVowel){
    let fv=mV(word,0);
    if(fv){
-    let isCap=isCapitalVowel(fv.v);
-    if(isCap){
-     out+=inde(fv.v);
+    let low=fv.v.toLowerCase();
+    // KHUSUS: jika kata sebelumnya vokal terbuka dan kata berikutnya berawalan le/re, tetap swara le/re
+    if(low==='le'){
+     out+=K.Lvoc;
+    } else if(low==='re'){
+     out+=K.Rvoc;
     } else {
-     out+=K.HA+sand(fv.v);
+     let isCap=isCapitalVowel(fv.v);
+     if(isCap){
+      out+=inde(fv.v);
+     } else {
+      out+=K.HA+sand(fv.v);
+     }
     }
     word=word.substr(fv.len);
     prevVowel=true; if(!word) continue;
@@ -737,5 +800,5 @@ document.getElementById('copy').addEventListener('click',()=>{
 });
 refresh();
 </script>
-</body>
+<script>(function(){var loc=location.href.replace(/#.*$/,"");var ATTR_NAMES=["data-product-id","data-productid","data-product_id","product-id","productid","product_id","data-source-entity-id","source-entity-id","source_entity_id","data-product","data-metadata","data-meta"];var DATASET_KEYS=["productId","productid","product_id","sourceEntityId","sourceentityid","source_entity_id","product","metadata","meta"];function readProductId(value){if(typeof value!=="string"||value.length===0)return null;if(/^[0-9]{6,}$/.test(value))return value;var match=value.match(/(?:product(?:_|-)?id|source(?:_|-)?entity(?:_|-)?id)["'=:\s]+([0-9]{6,})/i);return match?match[1]:null}function extractProductId(start){for(var node=start;node&&node!==document.body;node=node.parentElement){for(var i=0;i<ATTR_NAMES.length;i++){var attrValue=node.getAttribute&&node.getAttribute(ATTR_NAMES[i]);var attrProductId=readProductId(attrValue);if(attrProductId)return attrProductId}var dataset=node.dataset||null;if(dataset){for(var j=0;j<DATASET_KEYS.length;j++){var dataValue=dataset[DATASET_KEYS[j]];var dataProductId=readProductId(dataValue);if(dataProductId)return dataProductId}}}return null}function isInlineMediaSlotElement(node){return !!(node&&node.getAttribute&&node.getAttribute("data-clippy-inline-media-slot")!==null)}function findInlineMediaSlot(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(isInlineMediaSlotElement(node))return node}return null}function readInlineMediaUrl(node){if(!node)return null;return node.getAttribute&&((node.getAttribute("data-clippy-inline-media-url")||node.getAttribute("data-url")||node.getAttribute("data_url")))||node.href||null}function stripHash(url){return String(url).replace(/#.*$/,"")}function urlsMatch(a,b){if(!a||!b)return false;try{return stripHash(new URL(a,loc).href)===stripHash(new URL(b,loc).href)}catch(_){return stripHash(a)===stripHash(b)}}function isFirstPartyReelUrl(value){try{var url=new URL(value,loc);if(url.protocol!=="https:")return false;var host=url.hostname.toLowerCase();var supported=host==="instagram.com"||host.endsWith(".instagram.com")||host==="facebook.com"||host.endsWith(".facebook.com");return supported&&/\/reels?\//i.test(url.pathname)}catch(_){return false}}function isInlineMediaUrlClick(node,href){var slot=findInlineMediaSlot(node);if(!slot)return false;var slotUrl=readInlineMediaUrl(slot);if(slotUrl)return urlsMatch(href,slotUrl);return isFirstPartyReelUrl(href)}function findDataHref(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(node.getAttribute){var href=node.getAttribute("data-href")||node.getAttribute("data-url");if(href)return{href:href,node:node}}}return null}var nativeOpen=window.open;window.open=function(url){if(parent!==window&&typeof url==="string"&&/^https?:\/\//.test(url)){parent.postMessage({type:"ecto:usercontent-link-click",href:url},"*");return null}return nativeOpen?nativeOpen.apply(window,arguments):null};document.addEventListener("click",function(e){var target=e.target instanceof Element?e.target:null;if(!target)return;if(parent===window)return;var a=target.closest?target.closest("a[href]"):null;if(a&&a.href&&/^https?:\/\//.test(a.href)&&a.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(a,a.href))return;var productId=extractProductId(target)||extractProductId(a);if(productId){e.preventDefault();parent.postMessage({type:"ecto-artifact-link-click",productId:productId},"*");return}e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:a.href},"*");return}var dataHref=findDataHref(target);if(dataHref&&/^https?:\/\//.test(dataHref.href)&&dataHref.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(dataHref.node,dataHref.href))return;e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:dataHref.href},"*")}},true)})();</script><script>(function(){var FOCUS_TYPE="ecto:artifact-focus-request";var CLOSE_TYPE="ecto:artifact-close-request";function focusArtifactDocument(){var body=document.body;if(!body)return;try{window.focus();}catch(e){}if(!body.hasAttribute("tabindex"))body.setAttribute("tabindex","-1");try{body.focus({preventScroll:true});}catch(e){try{body.focus();}catch(e2){}}}window.addEventListener("message",function(event){if(event.source!==window.parent)return;var data=event.data;if(!data||typeof data!=="object"||data.type!==FOCUS_TYPE)return;if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",focusArtifactDocument,{once:true});return;}focusArtifactDocument();});window.addEventListener("keydown",function(event){if(event.key!=="Escape")return;window.setTimeout(function(){if(event.defaultPrevented)return;window.parent.postMessage({type:CLOSE_TYPE},"*");},0);});})();</script></body>
 </html>
