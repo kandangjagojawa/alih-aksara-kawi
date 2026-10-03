@@ -136,6 +136,25 @@ code{background:#f0e6d8;padding:.12rem .38rem;border-radius:4px;font-weight:700;
 <li><span><span class="kawi">𑼲</span> ha</span><code>h</code></li>
 </ul>
 </div>
+<div class="box">
+<h3>Tanda Baca & Tanda Khusus</h3>
+<ul>
+<li><span><span class="kawi">𑼀</span> candrabindu</span><code>candrabindu / ^</code></li>
+<li><span><span class="kawi">𑽅</span> section marker</span><code>section / ##</code></li>
+<li><span><span class="kawi">𑽆</span> alt section</span><code>altsection / #*</code></li>
+<li><span><span class="kawi">𑽇</span> flower</span><code>flower / *</code></li>
+<li><span><span class="kawi">𑽈</span> space filler</span><code>spacefiller / _</code></li>
+<li><span><span class="kawi">𑽉</span> dot</span><code>dot / , : |</code></li>
+<li><span><span class="kawi">𑽊</span> double dot</span><code>doubledot / ..</code></li>
+<li><span><span class="kawi">𑽋</span> triple dot</span><code>tripledot / ...</code></li>
+<li><span><span class="kawi">𑽌</span> circle</span><code>circle / o</code></li>
+<li><span><span class="kawi">𑽍</span> filled circle</span><code>filledcircle / @</code></li>
+<li><span><span class="kawi">𑽎</span> spiral</span><code>spiral / ~</code></li>
+<li><span><span class="kawi">𑽏</span> closing spiral</span><code>closingspiral / ~c</code></li>
+<li><span><span class="kawi">𑽚</span> nukta</span><code>nukta / '</code></li>
+<li><span><span class="kawi">𑽊𑽐𑽊</span> angka</span><code>0-9 otomatis diapit double dot</code></li>
+</ul>
+</div>
 </div>
 </div>
 </div>
@@ -164,12 +183,16 @@ code{background:#f0e6d8;padding:.12rem .38rem;border-radius:4px;font-weight:700;
  */
 
 const K={
-REPHA:'\u{11F02}',CONJ:'\u{11F42}',KILLER:'\u{11F41}',ANUS:'\u{11F01}',VIS:'\u{11F03}',
+CANDRABINDU:'\u{11F00}',ANUS:'\u{11F01}',REPHA:'\u{11F02}',VIS:'\u{11F03}',
 A:'\u{11F04}',AA:'\u{11F05}',I:'\u{11F06}',II:'\u{11F07}',U:'\u{11F08}',UU:'\u{11F09}',Rvoc:'\u{11F0A}',RRvoc:'\u{11F0B}',Lvoc:'\u{11F0C}',LLvoc:'\u{11F0D}',E:'\u{11F0E}',AI:'\u{11F0F}',O:'\u{11F10}',
 KA:'\u{11F12}',KHA:'\u{11F13}',GA:'\u{11F14}',GHA:'\u{11F15}',NGA:'\u{11F16}',CA:'\u{11F17}',CHA:'\u{11F18}',JA:'\u{11F19}',JHA:'\u{11F1A}',NYA:'\u{11F1B}',TTA:'\u{11F1C}',TTHA:'\u{11F1D}',DDA:'\u{11F1E}',DDHA:'\u{11F1F}',NNA:'\u{11F20}',TA:'\u{11F21}',THA:'\u{11F22}',DA:'\u{11F23}',DHA:'\u{11F24}',NA:'\u{11F25}',PA:'\u{11F26}',PHA:'\u{11F27}',BA:'\u{11F28}',BHA:'\u{11F29}',MA:'\u{11F2A}',YA:'\u{11F2B}',RA:'\u{11F2C}',LA:'\u{11F2D}',WA:'\u{11F2E}',SHA:'\u{11F2F}',SSA:'\u{11F30}',SA:'\u{11F31}',HA:'\u{11F32}',
 VS_AA:'\u{11F34}',VS_I:'\u{11F36}',VS_II:'\u{11F37}',VS_U:'\u{11F38}',VS_UU:'\u{11F39}',VS_R:'\u{11F3A}',VS_L:'\u{11F3C}',VS_E:'\u{11F3E}',VS_AI:'\u{11F3F}',VS_EU:'\u{11F40}',
-DANDA:'\u{11F43}',DOT:'\u{11F49}',
-DIG:['\u{11F50}','\u{11F51}','\u{11F52}','\u{11F53}','\u{11F54}','\u{11F55}','\u{11F56}','\u{11F57}','\u{11F58}','\u{11F59}']
+KILLER:'\u{11F41}',CONJ:'\u{11F42}',DANDA:'\u{11F43}',DOUBLE_DANDA:'\u{11F44}',
+SECTION:'\u{11F45}',ALT_SECTION:'\u{11F46}',FLOWER:'\u{11F47}',SPACE_FILLER:'\u{11F48}',
+DOT:'\u{11F49}',DOUBLE_DOT:'\u{11F4A}',TRIPLE_DOT:'\u{11F4B}',CIRCLE:'\u{11F4C}',FILLED_CIRCLE:'\u{11F4D}',
+SPIRAL:'\u{11F4E}',CLOSING_SPIRAL:'\u{11F4F}',
+DIG:['\u{11F50}','\u{11F51}','\u{11F52}','\u{11F53}','\u{11F54}','\u{11F55}','\u{11F56}','\u{11F57}','\u{11F58}','\u{11F59}'],
+NUKTA:'\u{11F5A}'
 };
 K.VS_O=K.VS_E+K.VS_AA; K.VS_AU=K.VS_AI+K.VS_AA;
 
@@ -275,7 +298,18 @@ function tokenize(s){
 
 function transliterate(raw){
  if(!raw) return '';
- let toks=tokenize(raw);
+ // Preprocess simbol tanda baca jadi keyword agar bisa dieksekusi di kotak transliterasi
+ let pre = raw;
+ pre = pre.replace(/##/g, ' section ');
+ pre = pre.replace(/#\*/g, ' altsection ');
+ pre = pre.replace(/\.\.\./g, ' tripledot ');
+ pre = pre.replace(/\.\./g, ' doubledot ');
+ pre = pre.replace(/\^/g, ' candrabindu ');
+ pre = pre.replace(/\*/g, ' flower ');
+ pre = pre.replace(/@/g, ' filledcircle ');
+ pre = pre.replace(/~c/gi, ' closingspiral ');
+ pre = pre.replace(/~/g, ' spiral ');
+ let toks=tokenize(pre);
  let out='';
  let pending=null;
  let prevVowel=false;
@@ -311,6 +345,151 @@ function transliterate(raw){
 
   let word=tk.w;
   let lastConsonant=null;
+  // PUNCTUATION & TANDA KHUSUS - cara ketik Latin
+  let lowWord = word.toLowerCase();
+  if(['candrabindu','candra','^'].includes(lowWord)){
+   if(pending){
+    if(pending.type==='ng') out+=K.ANUS;
+    else if(pending.type==='h') out+=K.VIS;
+    else if(pending.ch===K.RA) out+=K.RA+K.KILLER;
+    else out+=pending.ch+K.KILLER;
+    pending=null;
+   }
+   out+=K.CANDRABINDU;
+   prevVowel=false; lastConsonant=null; continue;
+  }
+  if(['section','sectionmarker','##'].includes(lowWord)){
+   if(pending){
+    if(pending.type==='ng') out+=K.ANUS;
+    else if(pending.type==='h') out+=K.VIS;
+    else if(pending.ch===K.RA) out+=K.RA+K.KILLER;
+    else out+=pending.ch+K.KILLER;
+    pending=null;
+   }
+   out+=K.SECTION;
+   prevVowel=false; lastConsonant=null; continue;
+  }
+  if(['altsection','alternatesection','alt_section','#*'].includes(lowWord)){
+   if(pending){
+    if(pending.type==='ng') out+=K.ANUS;
+    else if(pending.type==='h') out+=K.VIS;
+    else if(pending.ch===K.RA) out+=K.RA+K.KILLER;
+    else out+=pending.ch+K.KILLER;
+    pending=null;
+   }
+   out+=K.ALT_SECTION;
+   prevVowel=false; lastConsonant=null; continue;
+  }
+  if(['flower','bunga','*'].includes(lowWord)){
+   if(pending){
+    if(pending.type==='ng') out+=K.ANUS;
+    else if(pending.type==='h') out+=K.VIS;
+    else if(pending.ch===K.RA) out+=K.RA+K.KILLER;
+    else out+=pending.ch+K.KILLER;
+    pending=null;
+   }
+   out+=K.FLOWER;
+   prevVowel=false; lastConsonant=null; continue;
+  }
+  if(['spacefiller','filler','_'].includes(lowWord)){
+   if(pending){
+    if(pending.type==='ng') out+=K.ANUS;
+    else if(pending.type==='h') out+=K.VIS;
+    else if(pending.ch===K.RA) out+=K.RA+K.KILLER;
+    else out+=pending.ch+K.KILLER;
+    pending=null;
+   }
+   out+=K.SPACE_FILLER;
+   prevVowel=false; lastConsonant=null; continue;
+  }
+  if(['dot','titik',',',':','|'].includes(lowWord) || lowWord==='dot'){
+   if(pending){
+    if(pending.type==='ng') out+=K.ANUS;
+    else if(pending.type==='h') out+=K.VIS;
+    else if(pending.ch===K.RA) out+=K.RA+K.KILLER;
+    else out+=pending.ch+K.KILLER;
+    pending=null;
+   }
+   out+=K.DOT;
+   prevVowel=false; lastConsonant=null; continue;
+  }
+  if(['doubledot','double_dot','..'].includes(lowWord)){
+   if(pending){
+    if(pending.type==='ng') out+=K.ANUS;
+    else if(pending.type==='h') out+=K.VIS;
+    else if(pending.ch===K.RA) out+=K.RA+K.KILLER;
+    else out+=pending.ch+K.KILLER;
+    pending=null;
+   }
+   out+=K.DOUBLE_DOT;
+   prevVowel=false; lastConsonant=null; continue;
+  }
+  if(['tripledot','triple_dot','...'].includes(lowWord)){
+   if(pending){
+    if(pending.type==='ng') out+=K.ANUS;
+    else if(pending.type==='h') out+=K.VIS;
+    else if(pending.ch===K.RA) out+=K.RA+K.KILLER;
+    else out+=pending.ch+K.KILLER;
+    pending=null;
+   }
+   out+=K.TRIPLE_DOT;
+   prevVowel=false; lastConsonant=null; continue;
+  }
+  if(['circle','lingkaran','o'].includes(lowWord)){
+   if(pending){
+    if(pending.type==='ng') out+=K.ANUS;
+    else if(pending.type==='h') out+=K.VIS;
+    else if(pending.ch===K.RA) out+=K.RA+K.KILLER;
+    else out+=pending.ch+K.KILLER;
+    pending=null;
+   }
+   out+=K.CIRCLE;
+   prevVowel=false; lastConsonant=null; continue;
+  }
+  if(['filledcircle','filled_circle','@'].includes(lowWord)){
+   if(pending){
+    if(pending.type==='ng') out+=K.ANUS;
+    else if(pending.type==='h') out+=K.VIS;
+    else if(pending.ch===K.RA) out+=K.RA+K.KILLER;
+    else out+=pending.ch+K.KILLER;
+    pending=null;
+   }
+   out+=K.FILLED_CIRCLE;
+   prevVowel=false; lastConsonant=null; continue;
+  }
+  if(['spiral','~'].includes(lowWord)){
+   if(pending){
+    if(pending.type==='ng') out+=K.ANUS;
+    else if(pending.type==='h') out+=K.VIS;
+    else if(pending.ch===K.RA) out+=K.RA+K.KILLER;
+    else out+=pending.ch+K.KILLER;
+    pending=null;
+   }
+   out+=K.SPIRAL;
+   prevVowel=false; lastConsonant=null; continue;
+  }
+  if(['closingspiral','closing_spiral','~c'].includes(lowWord)){
+   if(pending){
+    if(pending.type==='ng') out+=K.ANUS;
+    else if(pending.type==='h') out+=K.VIS;
+    else if(pending.ch===K.RA) out+=K.RA+K.KILLER;
+    else out+=pending.ch+K.KILLER;
+    pending=null;
+   }
+   out+=K.CLOSING_SPIRAL;
+   prevVowel=false; lastConsonant=null; continue;
+  }
+  if(['nukta',"'"].includes(lowWord)){
+   if(pending){
+    if(pending.type==='ng') out+=K.ANUS;
+    else if(pending.type==='h') out+=K.VIS;
+    else if(pending.ch===K.RA) out+=K.RA+K.KILLER;
+    else out+=pending.ch+K.KILLER;
+    pending=null;
+   }
+   out+=K.NUKTA;
+   prevVowel=false; lastConsonant=null; continue;
+  }
   // ATURAN KHUSUS: setelah konsonan mati (kecuali r mati, ng mati, h mati), le (11F0C) -> la+pepet, re (11F0A) -> VS_R
   // Jika pending ada dan kata berikutnya adalah 'le' atau 're', maka:
   if(pending && (word.toLowerCase()==='le' || word.toLowerCase()==='re')){
@@ -550,7 +729,15 @@ function transliterate(raw){
   let i=0; let localV=false; let lastVowel=null; let lastTransformedNc=null; let lastTransformedNcLen=0;
   while(i<word.length){
    if(word[i]==='-'||word[i]==='_'){i++;continue;}
-   if(word[i]>='0'&&word[i]<='9'){ out+=K.DIG[parseInt(word[i])]; i++; localV=true; continue; }
+   if(word[i]>='0'&&word[i]<='9'){
+    // Angka diapit double dot di awal dan akhir
+    let isStart = (i===0 || !(word[i-1]>='0' && word[i-1]<='9'));
+    let isEnd = (i+1>=word.length || !(word[i+1]>='0' && word[i+1]<='9'));
+    if(isStart) out+=K.DOUBLE_DOT;
+    out+=K.DIG[parseInt(word[i])];
+    if(isEnd) out+=K.DOUBLE_DOT;
+    i++; localV=true; continue;
+   }
 
    // FIX: re/le dimanapun selalu vocalic r/l (bawah yang benar), bukan ra+pepet
    let vowAtI=mV(word,i);
