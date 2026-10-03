@@ -30,11 +30,12 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Kawi:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Noto Sans Kawi',sans-serif;background:#faf8f3;color:#1a1a1a;padding:1.5rem;line-height:1.6}
-.container{max-width:980px;margin:0 auto}
+body{font-family:'Noto Sans Kawi',sans-serif;background:#faf8f3;color:#1a1a1a;padding:1.5rem;line-height:1.6;min-height:100vh;display:flex;flex-direction:column}
+.container{max-width:980px;margin:0 auto;flex:1;width:100%}
 h1{font-size:1.9rem;letter-spacing:.05em;font-weight:600}
 .sub{font-size:.92rem;letter-spacing:.32em;margin:.2rem 0 1.8rem;color:#8a4a1e;font-weight:600}
-.ctrl{display:flex;gap:1rem;align-items:center;margin-bottom:1rem;font-family:sans-serif;font-size:.85rem;color:#6b5d52}
+.ctrl{display:flex;gap:1.5rem;align-items:center;margin-bottom:1rem;font-family:sans-serif;font-size:.85rem;color:#6b5d52;flex-wrap:wrap}
+.footer{margin-top:3rem;padding:1.5rem 0 1rem;border-top:1px solid #e8dfd2;text-align:center;font-family:sans-serif;font-size:.85rem;color:#8a7e73;letter-spacing:.05em}
 textarea{width:100%;height:150px;padding:1rem;border:1px solid #e8dfd2;border-radius:12px;font-family:sans-serif;font-size:1rem;background:#fffefc;resize:vertical}
 textarea:focus{outline:none;border-color:#c17a3a}
 .preview-box{margin-top:1rem;border:1px solid #e8dfd2;border-radius:12px;background:#fffcf8;padding:1.6rem;min-height:210px}
@@ -71,10 +72,11 @@ code{background:#f0e6d8;padding:.12rem .38rem;border-radius:4px;font-weight:700;
 <div class="sub">NOTO SANS KAWI UNICODE</div>
 <div class="ctrl">
 <label>Ukuran <span id="sz">42</span> <input type="range" id="size" min="24" max="72" value="42"></label>
+<label>Spasi Baris <span id="lh">3.0</span> <input type="range" id="lineheight" min="1.5" max="5" step="0.1" value="3"></label>
 <span class="small">Ketik Latin, otomatis jadi Kawi Unicode U+11F00–U+11F5A</span>
 </div>
 <div class="row"><span style="font-family:sans-serif;font-weight:600">Latin</span><button id="clear" class="btn btn-ghost">Hapus</button></div>
-<textarea id="input" placeholder="Ketik di sini..."></textarea>
+<textarea id="input" placeholder="Ketik di sini..." autocapitalize="off" autocomplete="off" autocorrect="off" spellcheck="false"></textarea>
 <div class="row" style="margin-top:1rem"><span style="font-family:sans-serif;font-weight:600">Kawi</span><button id="copy" class="btn">Salin</button></div>
 <div class="preview-box"><div id="out" class="preview"></div></div>
 <div class="panel">
@@ -157,6 +159,7 @@ code{background:#f0e6d8;padding:.12rem .38rem;border-radius:4px;font-weight:700;
 </div>
 </div>
 </div>
+<footer class="footer">Dari KANDANGJAGO untuk Nusantara.</footer>
 </div>
 
 <script>
@@ -967,6 +970,8 @@ const input=document.getElementById('input');
 const out=document.getElementById('out');
 const size=document.getElementById('size');
 const sz=document.getElementById('sz');
+const lineheight=document.getElementById('lineheight');
+const lh=document.getElementById('lh');
 function refresh(){
   const txt = input.value;
   if(!txt.trim()){ out.textContent=''; return; }
@@ -979,6 +984,7 @@ function refresh(){
 }
 input.addEventListener('input',refresh);
 size.addEventListener('input',e=>{sz.textContent=e.target.value; out.style.fontSize=e.target.value+'px';});
+lineheight.addEventListener('input',e=>{lh.textContent=parseFloat(e.target.value).toFixed(1); out.style.lineHeight=e.target.value;});
 document.getElementById('clear').addEventListener('click',()=>{input.value=''; refresh();});
 document.getElementById('copy').addEventListener('click',()=>{
   const t=out.textContent;
